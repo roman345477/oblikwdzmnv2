@@ -49,13 +49,22 @@ async def post_init(application):
     except Exception as e:
         logger.warning(f"Could not set menu button: {e}")
 
-def run_bot():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+async def run_bot_async():
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("start", start))
     logger.info("Bot starting...")
-    app.run_polling(drop_pending_updates=True)
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling(drop_pending_updates=True)
+    logger.info("Bot is running")
+    # тримаємо бота живим
+    while True:
+        await asyncio.sleep(3600)
+
+def run_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_bot_async())
 
 def main():
     if not BOT_TOKEN:
