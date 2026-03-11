@@ -69,16 +69,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-Переконайся що в репо є три файли:
-
-**`Procfile`:**
-```
-web: gunicorn --bind 0.0.0.0:$PORT --workers 1 bot:web & python -c "import asyncio; from bot import run_bot_async; asyncio.run(run_bot_async())"
-```
-
-**`requirements.txt`:**
-```
-python-telegram-bot==20.7
-flask
-gunicorn
