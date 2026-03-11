@@ -5,13 +5,11 @@ from flask import Flask, send_file
 from telegram import Update, WebAppInfo, MenuButtonWebApp
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# ─── Config ───
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 APP_URL = os.environ.get("APP_URL", "")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ─── Flask ───
 web = Flask(__name__)
 
 @web.route("/")
@@ -22,7 +20,6 @@ def index():
 def health():
     return "ok", 200
 
-# ─── Telegram Bot ───
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = APP_URL if APP_URL else f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
     await update.message.reply_text(
@@ -59,13 +56,5 @@ async def run_bot_async():
     while True:
         await asyncio.sleep(3600)
 
-def main():
-    if not BOT_TOKEN:
-        logger.error("BOT_TOKEN not set!")
-        return
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(run_bot_async())
-
 if __name__ == "__main__":
-    main()
+    asyncio.run(run_bot_async())
