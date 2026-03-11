@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from threading import Thread
 from flask import Flask, send_file
 from telegram import Update, WebAppInfo, MenuButtonWebApp
@@ -11,7 +12,7 @@ APP_URL = os.environ.get("APP_URL", "")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ─── Flask: serve the HTML ───
+# ─── Flask ───
 web = Flask(__name__)
 
 @web.route("/")
@@ -21,10 +22,6 @@ def index():
 @web.route("/health")
 def health():
     return "ok", 200
-
-def run_web():
-    port = int(os.environ.get("PORT", 8080))
-    web.run(host="0.0.0.0", port=port)
 
 # ─── Telegram Bot ───
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,22 +49,26 @@ async def post_init(application):
     except Exception as e:
         logger.warning(f"Could not set menu button: {e}")
 
+def run_bot():
+    app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
+    app.add_handler(CommandHandler("start", start))
+    logger.info("Bot starting...")
+    app.run_polling(drop_pending_updates=True)
+
 def main():
     if not BOT_TOKEN:
         logger.error("BOT_TOKEN not set!")
         return
 
-    # Start Flask in background thread
-    t = Thread(target=run_web, daemon=True)
+    # Бот в окремому потоці
+    t = Thread(target=run_bot, daemon=True)
     t.start()
-    logger.info("Web server started")
+    logger.info("Bot thread started")
 
-    # Start Telegram bot
-    app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
-    app.add_handler(CommandHandler("start", start))
-
-    logger.info("Bot starting...")
-    app.run_polling(drop_pending_updates=True)
+    # Flask в головному потоці
+    port = int(os.environ.get("PORT", 8080))
+    logger.info(f"Starting Flask on port {port}")
+    web.run(host="0.0.0.0", port=port)
 
 if __name__ == "__main__":
     main()
