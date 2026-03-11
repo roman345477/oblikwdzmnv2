@@ -50,6 +50,8 @@ async def post_init(application):
         logger.warning(f"Could not set menu button: {e}")
 
 def run_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("start", start))
     logger.info("Bot starting...")
@@ -60,12 +62,10 @@ def main():
         logger.error("BOT_TOKEN not set!")
         return
 
-    # Бот в окремому потоці
     t = Thread(target=run_bot, daemon=True)
     t.start()
     logger.info("Bot thread started")
 
-    # Flask в головному потоці
     port = int(os.environ.get("PORT", 8080))
     logger.info(f"Starting Flask on port {port}")
     web.run(host="0.0.0.0", port=port)
