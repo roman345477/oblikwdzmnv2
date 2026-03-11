@@ -7,8 +7,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 # ─── Config ───
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-APP_URL = os.environ.get("APP_URL", "")  # e.g. https://your-app.up.railway.app
-
+APP_URL = os.environ.get("APP_URL", "")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ web = Flask(__name__)
 
 @web.route("/")
 def index():
-    return send_file("index.html")
+    return send_file(os.path.join(os.path.dirname(__file__), "index.html"))
 
 @web.route("/health")
 def health():
@@ -41,7 +40,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def post_init(application):
-    """Set the bot menu button to open the web app."""
     url = APP_URL if APP_URL else f"https://{os.environ.get('RAILWAY_PUBLIC_DOMAIN', 'localhost')}"
     try:
         await application.bot.set_chat_menu_button(
@@ -60,13 +58,14 @@ def main():
         return
 
     # Start Flask in background thread
-    Thread(target=run_web, daemon=True).start()
+    t = Thread(target=run_web, daemon=True)
+    t.start()
     logger.info("Web server started")
 
     # Start Telegram bot
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("start", start))
-    
+
     logger.info("Bot starting...")
     app.run_polling(drop_pending_updates=True)
 
