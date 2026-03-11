@@ -1,7 +1,6 @@
 import os
 import logging
 import asyncio
-from threading import Thread
 from flask import Flask, send_file
 from telegram import Update, WebAppInfo, MenuButtonWebApp
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -57,27 +56,30 @@ async def run_bot_async():
     await app.start()
     await app.updater.start_polling(drop_pending_updates=True)
     logger.info("Bot is running")
-    # тримаємо бота живим
     while True:
         await asyncio.sleep(3600)
-
-def run_bot():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(run_bot_async())
 
 def main():
     if not BOT_TOKEN:
         logger.error("BOT_TOKEN not set!")
         return
-
-    t = Thread(target=run_bot, daemon=True)
-    t.start()
-    logger.info("Bot thread started")
-
-    port = int(os.environ.get("PORT", 8080))
-    logger.info(f"Starting Flask on port {port}")
-    web.run(host="0.0.0.0", port=port)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(run_bot_async())
 
 if __name__ == "__main__":
     main()
+```
+
+Переконайся що в репо є три файли:
+
+**`Procfile`:**
+```
+web: gunicorn --bind 0.0.0.0:$PORT --workers 1 bot:web & python -c "import asyncio; from bot import run_bot_async; asyncio.run(run_bot_async())"
+```
+
+**`requirements.txt`:**
+```
+python-telegram-bot==20.7
+flask
+gunicorn
