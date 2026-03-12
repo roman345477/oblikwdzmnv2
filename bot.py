@@ -68,7 +68,6 @@ if __name__ == "__main__":
         logger.error("BOT_TOKEN not set!")
     else:
         asyncio.run(run_bot_async())
-```
 
 І `Procfile`:
 ```
