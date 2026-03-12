@@ -25,7 +25,8 @@ web = Flask(__name__)
 
 @web.route("/")
 def index():
-    return send_file(os.path.join(os.path.dirname(__file__), "index.html"))
+    here = os.path.dirname(os.path.abspath(__file__))
+    return send_file(os.path.join(here, "index.html"))
 
 @web.route("/health")
 def health():
